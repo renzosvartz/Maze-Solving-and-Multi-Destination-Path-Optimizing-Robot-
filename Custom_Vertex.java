@@ -4,8 +4,7 @@
 
 package src;
 
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 import src.Main.ORIENTATION;
 
@@ -22,6 +21,7 @@ public class Custom_Vertex
 	private Custom_Vertex predecessor;
 	//private HashMap<String, ORIENTATION> list_of_froms;
 	private HashMap<String, ORIENTATION> list_of_tos;
+	private HashMap<String, ArrayList<String>> list_of_hallways;
 	private boolean visited;
 	private int cost;
 	
@@ -41,6 +41,7 @@ public class Custom_Vertex
 		this.list_of_tos = new HashMap<>();
 		this.visited = false;
 		this.cost = cost;
+		this.list_of_hallways = new HashMap<String, ArrayList<String>>();
 	}
 
 	/**
@@ -59,6 +60,7 @@ public class Custom_Vertex
 		list_of_tos.put(predecessor.toString(), to);
 		this.visited = false;
 		this.cost = cost;
+		this.list_of_hallways = new HashMap<String, ArrayList<String>>();
 	}
 
 	/**
@@ -75,6 +77,7 @@ public class Custom_Vertex
 		this.list_of_tos = list_of_tos;
 		this.visited = false;
 		this.cost = cost;
+		this.list_of_hallways = new HashMap<String, ArrayList<String>>();
 	}
 	
 	public ORIENTATION reverse(ORIENTATION orientation) 
@@ -92,6 +95,16 @@ public class Custom_Vertex
 			default:
 					return null;
         }
+	}
+
+	public void add_hallways(String destination, ArrayList<String> hallways) 
+	{
+		list_of_hallways.put(destination, hallways);
+	}
+
+	public ArrayList<String> get_hallways(String destination)
+	{
+		return list_of_hallways.get(destination);
 	}
 
 	/** Adds a path to the path list. */
@@ -192,6 +205,7 @@ public class Custom_Vertex
 		//update optimal predecessor
 		if (current_cost < this.cost)
 		{
+			System.err.println(current_cost + " vs " + this.cost);
 			this.cost = current_cost;
 			this.predecessor = new_predecessor;
 			return true;
@@ -206,6 +220,7 @@ public class Custom_Vertex
 	{
 		if (current_cost < this.cost)
 		{
+			System.err.println(current_cost + " vs " + this.cost);
 			this.cost = current_cost;
 			this.predecessor = current_predecessor;
 			return true;
