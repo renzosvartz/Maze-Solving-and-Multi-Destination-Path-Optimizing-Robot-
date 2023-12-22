@@ -545,38 +545,6 @@ public class WIPDS4
             Custom_Vertex temp_neighbor = vertices.get(neighbor_name);
             Custom_Vertex djikstra_vertex = new Custom_Vertex(neighbor_name, edges.get(first_vertex.toString() + " " + neighbor_name), first_vertex, temp_neighbor.get_tos());
 
-            if (djikstra_vertex.equals(destination_vertex))
-            {
-                log("Found the fastest way to " + ids.get(destination_vertex.toString()) + " from " + ids.get(source_vertex.toString()));
-
-                if (color)
-                {
-                    highlight_path(djikstra_vertex, true);
-                    recolor_path(djikstra_vertex);
-                }
-
-                //optionally: add up costs to return cost for comparison
-                if (path_cost != null)
-                {
-                    path_cost.set_cost(djikstra_vertex.get_cost());
-                }
-
-                while (!djikstra_vertex.equals(source_vertex))
-                {
-                    //Stack vertices, followed by their predecessors.
-                    log("Stacking " + djikstra_vertex.toString() + " to path.");
-                    stack_of_vertex_names.push(djikstra_vertex.toString());
-
-                    //update current vertex
-                    djikstra_vertex = djikstra_vertex.get_predecessor();
-
-                }
-
-                return stack_of_vertex_names;
-            }
-            
-
-
             //add vertices to a hashmap set and priority queue
             d_vertices.put(neighbor_name, djikstra_vertex);
             d_pq.add(djikstra_vertex);
