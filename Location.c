@@ -25,7 +25,7 @@ void printLocation(Location* location) {
     printf("(%d, %d)\n", location->x, location->y);
 }
 
-char* toString(Location* location) {
+char* locationToString(Location* location) {
     char* str = (char*)malloc(20 * sizeof(char));
     if (str == NULL) {
         fprintf(stderr, "Error: Memory allocation failed\n");

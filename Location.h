@@ -10,7 +10,7 @@ Location* createLocation();
 int getX(Location* location);
 int getY(Location* location);
 void printLocation(Location* location);
-char* toString(Location* location);
+char* locationToString(Location* location);
 void destroyLocation(Location* location);
 
 #endif /* LOCATION_H */

@@ -3,14 +3,13 @@
 #include "WIPDS4.h"
 #include "API.h"
 
-void log(char* text) {
+void logg(char* text) {
     fprintf(stderr, "%s\n", text);
     fflush(stderr);
 }
 
 int main(int argc, char* argv[]) {
-    log("Running...");
-    WIPDS4 djikstras_solver;
-    djikstras_solver.main();
+    logg("Running...");
+    WIPDS4main();
     return 0;
 }

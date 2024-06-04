@@ -1,18 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
-#include "Location.h"
-#include "Stack.h"
-#include "HashMap.h"
-#include "ArrayList.h"
-#include "PriorityQueue.h"
-#include "Custom_Vertex.h"
-#include "Cost.h"
-#include "API.h"
-
-typedef enum {
-    NORTH, EAST, SOUTH, WEST
-} ORIENTATION;
+#include "Main.h"
+#include "WIPDS4.h"
+#include <string.h>
 
 // Global variables
 ORIENTATION orientation;
@@ -29,23 +17,24 @@ HashMap *point_to_point_hallways;
 PriorityQueue *pq;
 
 // Function to initialize global variables
-void initGlobals() {
+void initGlobals() 
+{
     orientation = NORTH;
     location = createLocation();
     current_cost = 0;
     optimal_cost = INT_MAX;
     best_path = createStack();
-    vertices = createHashMap();
+    vertices = createHashMap(10);
     vertex_id = 1;
-    ids = createHashMap();
-    edges = createHashMap();
-    hallways = createHashMap();
-    point_to_point_hallways = createHashMap();
-    pq = createPriorityQueue();
+    ids = createHashMap(10);
+    edges = createHashMap(10);
+    hallways = createHashMap(10);
+    point_to_point_hallways = createHashMap(10);
+    pq = createPriorityQueue(10);
 }
 
 // Main function
-int main() {
+int WIPDS4main() {
     initGlobals();
 
     // Setting colors
@@ -61,10 +50,10 @@ int main() {
 
     while (!done && !isEmpty(pq)) // Assuming pq is the priority queue declared globally
     {
-        Custom_Vertex *vertex_to_visit = poll(pq); // Assuming poll function retrieves and removes the head of the priority queue
+        Custom_Vertex *vertex_to_visit = dequeue(pq); // Assuming poll function retrieves and removes the head of the priority queue
 
-        // Logging
-        printf("Traveling from %s to %s\n", get(ids, toString(current_vertex)), get(ids, toString(vertex_to_visit)));
+        // ////loggging
+        printf("Traveling from %s to %s\n", get(ids, cvToString(current_vertex)), get(ids, cvToString(vertex_to_visit)));
 
         // Head to vertex_to_visit
         head_to(current_vertex, vertex_to_visit, true);
@@ -73,7 +62,7 @@ int main() {
         visit(vertex_to_visit);
 
         // Set color
-        setColor(location->x, location->y, 'G'); // Assuming location is a pointer to a Location struct
+        API_setColor(location->x, location->y, 'G'); // Assuming location is a pointer to a Location struct
 
         // Search paths
         search_paths(vertex_to_visit);
@@ -82,10 +71,10 @@ int main() {
         current_vertex = vertex_to_visit;
     }
 
-    // Perform Dijkstra's solution
-    dijkstras_solution();
+    // Perform Djikstra's solution
+    djikstras_solution();
 
-    // Logging
+    // ////loggging
     printf("Done!\n");
 
     // Move mouse
@@ -101,12 +90,12 @@ void move_mouse()
     location->y = 0;
     orientation = NORTH;
 
-    // Logging
-    log("Now moving between random points. Working on reading user input for this, soon.");
+    // ////loggging
+    ////logg("Now moving between random points. Working on reading user input for this, soon.");
     API_clearAllColor();
 
     // Generating random destinations
-    ArrayList *destinations = newArrayList();
+    ArrayList *destinations = createArrayList();
     addElement(destinations, "(11, 4)");
     addElement(destinations, "(12, 10)");
     addElement(destinations, "(2, 15)");
@@ -120,18 +109,18 @@ void move_mouse()
         addElement(destinations, destination);
 
         // Moving to destination
-        point_to_point(toString(location), destination);
+        point_to_point(locationToString(location), destination);
     }
 }
 
 // Define the parseCoordinates function
-int* parseCoordinates(const char* hallway) {
+int* parseCoordinates( char* hallway) {
     static int coordinates[2]; // Assuming coordinates are (x, y)
     sscanf(hallway, "(%d, %d)", &coordinates[0], &coordinates[1]);
     return coordinates;
 }
 
-void highlight_hallway(Custom_Vertex* current, const char* pathway, HashMap* point_to_point_hallways) {
+void highlight_hallway(Custom_Vertex* current, char* pathway, HashMap* point_to_point_hallways) {
     printf("Highlighting to %s\n", current->vertex_coor);
 
     Stack* point_to_points = createStack();
@@ -149,37 +138,31 @@ void highlight_hallway(Custom_Vertex* current, const char* pathway, HashMap* poi
     push(point_to_points, pathway);
 
     // Iterate through each highlight and color the hallways
-    while (!isEmpty(point_to_points)) {
-        char* hallways = (char*)top(point_to_points);
-        pop(point_to_points);
-        ArrayList* hallways_list = get(point_to_point_hallways, hallways);
-        if (hallways_list != NULL) {
-            for (int i = 0; i < getSize(hallways_list); i++) {
-                char* hallway = (char*)getElement(hallways_list, i);
-                int* hallway_coor = parseCoordinates(hallway);
-                // Assuming API.setColor function is defined elsewhere
-                // and properly handles coloring
-                API.setColor(hallway_coor[0], hallway_coor[1], 'R');
-            }
+    
+    for (int i = 0; i < stackLength(point_to_points); i++) {
+        char* hallways = pop(point_to_points);
+        char** hallways_for_pathway = get(point_to_point_hallways, pathway);
+        for (int j = 0; j < sizeof(hallways_for_pathway) / sizeof(hallways_for_pathway[0]); j++) {
+            char* hallway = hallways_for_pathway[j];
+            int* hallway_coor = parseCoordinates(hallway);
+            API_setColor(hallway_coor[0], hallway_coor[1], 'R');
         }
-        // Free dynamically allocated memory
-        free(hallways);
     }
 
     // Cleanup
-    destroyStack(point_to_points);
+    clearStack(point_to_points);
 }
 
-void point_to_point(const char* source, const char* destination, HashMap* point_to_point_hallways, HashMap* vertices, HashMap* hallways) {
+void point_to_point( char* source, char* destination) {
     printf("Traveling from %s to %s\n", source, destination);
 
     int* source_coor = parseCoordinates(source);
     int* destination_coor = parseCoordinates(destination);
 
-    // Assuming API.setColor and API.clearColor functions are defined elsewhere
+    // Assuming API_setColor and API_clearColor functions are defined elsewhere
 
-    API.setColor(source_coor[0], source_coor[1], 'o');
-    API.setColor(destination_coor[0], destination_coor[1], 'o');
+    API_setColor(source_coor[0], source_coor[1], 'o');
+    API_setColor(destination_coor[0], destination_coor[1], 'o');
 
     // Both source and destination are vertices
     if (containsKey(vertices, source) && containsKey(vertices, destination)) {
@@ -200,11 +183,11 @@ void point_to_point(const char* source, const char* destination, HashMap* point_
         } else {
             Cost* cost_a = createCost();
             djikstras_best_path_between(source_vertex, vertex_a, cost_a, false);
-            add_cost(cost_a, get_cost_a(hallway));
+            addCost(cost_a, get_cost_a(hallway));
             Cost* cost_b = createCost();
             djikstras_best_path_between(source_vertex, vertex_b, cost_b, false);
-            add_cost(cost_b, get_cost_b(hallway));
-            if (get_cost(cost_a) <= get_cost(cost_b)) {
+            addCost(cost_b, get_cost_b(hallway));
+            if (getCost(cost_a) <= getCost(cost_b)) {
                 head_to(source_vertex, vertex_a, false);
                 reorient(get_from_a(hallway));
                 move_to_hallway(destination);
@@ -230,11 +213,11 @@ void point_to_point(const char* source, const char* destination, HashMap* point_
         } else {
             Cost* cost_a = createCost();
             djikstras_best_path_between(vertex_a, destination_vertex, cost_a, false);
-            add_cost(cost_a, get_cost_a(hallway));
+            addCost(cost_a, get_cost_a(hallway));
             Cost* cost_b = createCost();
             djikstras_best_path_between(vertex_b, destination_vertex, cost_b, false);
-            add_cost(cost_b, get_cost_b(hallway));
-            if (get_cost(cost_a) <= get_cost(cost_b)) {
+            addCost(cost_b, get_cost_b(hallway));
+            if (getCost(cost_a) <= getCost(cost_b)) {
                 reorient(get_to_a(hallway));
                 find_next_vertex();
                 head_to(vertex_a, destination_vertex, false);
@@ -256,46 +239,51 @@ void point_to_point(const char* source, const char* destination, HashMap* point_
         Custom_Vertex* vertex_da = get_a(destination_hallway);
         Custom_Vertex* vertex_db = get_b(destination_hallway);
         ArrayList* costs = createArrayList();
+        int INTMAX = 2147483647;
 
         // Calculate costs for different paths
         Cost* cost_aa = createCost();
         djikstras_best_path_between(vertex_sa, vertex_da, cost_aa, false);
-        add_cost(cost_aa, get_cost_a(source_hallway));
-        add_cost(cost_aa, get_cost_a(destination_hallway));
-        addElement(costs, get_cost(cost_aa));
+        addCost(cost_aa, get_cost_a(source_hallway));
+        addCost(cost_aa, get_cost_a(destination_hallway));
+        int costaa = getCost(cost_aa); 
+        addElement(costs, &costaa);
         destroyCost(cost_aa);
 
         if (vertex_db != NULL) {
             Cost* cost_ab = createCost();
             djikstras_best_path_between(vertex_sa, vertex_db, cost_ab, false);
-            add_cost(cost_ab, get_cost_a(source_hallway));
-            add_cost(cost_ab, get_cost_b(destination_hallway));
-            addElement(costs, get_cost(cost_ab));
+            addCost(cost_ab, get_cost_a(source_hallway));
+            addCost(cost_ab, get_cost_b(destination_hallway));
+            int costab = getCost(cost_ab); 
+            addElement(costs, &costab);
             destroyCost(cost_ab);
         } else {
-            addElement(costs, Integer_MAX_VALUE);
+            addElement(costs, &INTMAX);
         }
 
         if (vertex_sb != NULL) {
             Cost* cost_ba = createCost();
             djikstras_best_path_between(vertex_sb, vertex_da, cost_ba, false);
-            add_cost(cost_ba, get_cost_b(source_hallway));
-            add_cost(cost_ba, get_cost_a(destination_hallway));
-            addElement(costs, get_cost(cost_ba));
+            addCost(cost_ba, get_cost_b(source_hallway));
+            addCost(cost_ba, get_cost_a(destination_hallway));
+            int costba = getCost(cost_ba); 
+            addElement(costs, &costba);
             destroyCost(cost_ba);
         } else {
-            addElement(costs, Integer_MAX_VALUE);
+            addElement(costs, &INTMAX);
         }
 
         if (vertex_sb != NULL && vertex_db != NULL) {
         Cost* cost_bb = createCost();
         djikstras_best_path_between(vertex_sb, vertex_db, cost_bb, false);
-        add_cost(cost_bb, get_cost_b(source_hallway));
-        add_cost(cost_bb, get_cost_b(destination_hallway));
-        addElement(costs, get_cost(cost_bb));
+        addCost(cost_bb, get_cost_b(source_hallway));
+        addCost(cost_bb, get_cost_b(destination_hallway));
+        int costbb = getCost(cost_bb); 
+        addElement(costs, &costbb);
         destroyCost(cost_bb);
     } else {
-        addElement(costs, Integer_MAX_VALUE);
+        addElement(costs, &INTMAX);
     }
 
     // Find the minimum cost index
@@ -339,40 +327,41 @@ void point_to_point(const char* source, const char* destination, HashMap* point_
 
     destroyArrayList(costs);
 
-    API.clearColor(source_coor[0], source_coor[1]);
-    API.clearColor(destination_coor[0], destination_coor[1]);
+    API_clearColor(source_coor[0], source_coor[1]);
+    API_clearColor(destination_coor[0], destination_coor[1]);
 }
 
-public Stack<String> djikstras_best_path_between(Custom_Vertex source_vertex, Custom_Vertex destination_vertex, Cost path_cost, boolean color)
+Stack* djikstras_best_path_between(Custom_Vertex source_vertex, Custom_Vertex destination_vertex, Cost path_cost, bool color)
 {
-    if (source_vertex == null || destination_vertex == null)
+    /*
+    if (source_vertex == NULL || destination_vertex == NULL)
     {
-        if (path_cost != null)
+        if (path_cost != NULL)
         {
-            path_cost.set_cost(Integer.MAX_VALUE);
+            path_cost.set_cost(INT_MAX);
         }
 
-        return null;
+        return NULL;
     }
+    */
+    PriorityQueue* d_pq = createPriorityQueue(10);
+    HashMap* d_vertices = createHashMap(10);
+    Stack* stack_of_vertex_names = createStack(10);
 
-    PriorityQueue<Custom_Vertex> d_pq = new PriorityQueue<>((o1, o2) -> o1.get_cost() - o2.get_cost());
-    HashMap<String, Custom_Vertex> d_vertices = new HashMap<>();
-    Stack<String> stack_of_vertex_names = new Stack<>();
+    //////logg("Finding best path between " + cvToString(&source_vertex) + " and " + cvToString(&destination_vertex));
 
-    log("Finding best path between " + source_vertex.toString() + " and " + destination_vertex.toString());
-
-    Custom_Vertex first_vertex = new Custom_Vertex(source_vertex.toString(), 0, null, source_vertex.get_tos());
-    first_vertex.visit();
-    d_vertices.put(first_vertex.toString(), first_vertex);
+    Custom_Vertex* first_vertex = create_djikstra_custom_vertex(atoi(cvToString(&source_vertex)), 0, NULL, get_tos(&source_vertex));
+    visit(first_vertex);
+    put(d_vertices, cvToString(first_vertex), first_vertex);
 
     // Add first vertex's neighbors to the pq
     for (String neighbor_name : first_vertex.get_tos().keySet())
     {
-        log("Adding " + ids.get(source_vertex.toString()) + "'s neighbor " + ids.get(neighbor_name) + " to the Djikstra's pq");
+        ////logg("Adding " + ids.get(cvToString(source_vertex)) + "'s neighbor " + ids.get(neighbor_name) + " to the Djikstra's pq");
 
         // Create new Djikstra's motivated vertex
         Custom_Vertex temp_neighbor = vertices.get(neighbor_name);
-        Custom_Vertex djikstra_vertex = new Custom_Vertex(neighbor_name, edges.get(first_vertex.toString() + " " + neighbor_name), first_vertex, temp_neighbor.get_tos());
+        Custom_Vertex djikstra_vertex = create_djikstra_custom_vertex(neighbor_name, edges.get(first_vertex.cvToString() + " " + neighbor_name), first_vertex, temp_neighbor.get_tos());
 
         // Add vertices to a hashmap set and priority queue
         d_vertices.put(neighbor_name, djikstra_vertex);
@@ -383,11 +372,11 @@ public Stack<String> djikstras_best_path_between(Custom_Vertex source_vertex, Cu
     {
         Custom_Vertex current_vertex = d_pq.poll();
         current_vertex.visit();
-        log("Evaluating " + current_vertex.toString() + " by Djikstra's algorithm.");
+        ////logg("Evaluating " + current_vertex.cvToString() + " by Djikstra's algorithm.");
 
         if (current_vertex.equals(destination_vertex))
         {
-            log("Found the fastest way to " + ids.get(destination_vertex.toString()) + " from " + ids.get(source_vertex.toString()));
+            ////logg("Found the fastest way to " + ids.get(cvToString(destination_vertex)) + " from " + ids.get(cvToString(source_vertex)));
 
             if (color)
             {
@@ -396,16 +385,16 @@ public Stack<String> djikstras_best_path_between(Custom_Vertex source_vertex, Cu
             }
 
             // Optionally: add up costs to return cost for comparison
-            if (path_cost != null)
+            if (path_cost != NULL)
             {
-                path_cost.set_cost(current_vertex.get_cost());
+                path_cost.set_cost(current_vertex.getCost());
             }
 
             while (!current_vertex.equals(source_vertex))
             {
                 // Stack vertices, followed by their predecessors.
-                log("Stacking " + current_vertex.toString() + " to path.");
-                stack_of_vertex_names.push(current_vertex.toString());
+                ////logg("Stacking " + current_vertex.cvToString() + " to path.");
+                stack_of_vertex_names.push(current_vertex.cvToString());
 
                 // Update current vertex
                 current_vertex = current_vertex.get_predecessor();
@@ -433,9 +422,9 @@ public Stack<String> djikstras_best_path_between(Custom_Vertex source_vertex, Cu
                 }
 
                 // If this existing vertex now has a more optimal cost, due to this new connection, "reset" it in the pq.
-                if (existing_vertex.update_cost(current_vertex.get_cost() + edges.get(current_vertex.toString() + " " + neighbor_name), current_vertex))
+                if (existing_vertex.update_cost(current_vertex.getCost() + edges.get(current_vertex.cvToString() + " " + neighbor_name), current_vertex))
                 {
-                    log("Node " + ids.get(existing_vertex.toString()) + " has found a better predecessor, node " + ids.get(current_vertex.toString()));
+                    ////logg("Node " + ids.get(existing_vertex.cvToString()) + " has found a better predecessor, node " + ids.get(current_vertex.cvToString()));
 
                     // Update pq
                     d_pq.remove(existing_vertex);
@@ -443,14 +432,14 @@ public Stack<String> djikstras_best_path_between(Custom_Vertex source_vertex, Cu
                 }
                 else
                 {
-                    log("Node " + ids.get(existing_vertex.toString()) + " was refound by node " + ids.get(current_vertex.toString()) + " but at a higher cost, so it was not readded to the pq.");
+                    ////logg("Node " + ids.get(existing_vertex.cvToString()) + " was refound by node " + ids.get(current_vertex.cvToString()) + " but at a higher cost, so it was not readded to the pq.");
                 }
             }
             else // Neighbor does not exist in the priority queue
             {
                 // Create new Djikstra's motivated vertex
                 Custom_Vertex temp_neighbor = vertices.get(neighbor_name);
-                Custom_Vertex djikstra_vertex = new Custom_Vertex(neighbor_name, current_vertex.get_cost() + edges.get(current_vertex.toString() + " " + neighbor_name), current_vertex, temp_neighbor.get_tos());
+                Custom_Vertex djikstra_vertex = new Custom_Vertex(neighbor_name, current_vertex.getCost() + edges.get(current_vertex.cvToString() + " " + neighbor_name), current_vertex, temp_neighbor.get_tos());
 
                 // Add vertices to hashmap and priority queue
                 d_vertices.put(neighbor_name, djikstra_vertex);
@@ -465,7 +454,7 @@ public Stack<String> djikstras_best_path_between(Custom_Vertex source_vertex, Cu
         }
     }
 
-    return null;
+    return NULL;
 }
 
 int find_min_index(ArrayList *list) {
@@ -488,28 +477,28 @@ int find_min_index(ArrayList *list) {
 }
 
 void move_to_hallway(char *destination) {
-    move_forward();
+    API_moveForward();
 
-    while (paths_available() == 1 && strcmp(locationToString(), destination) != 0) {
-        if (!API.wallFront()) {
-            move_forward();
-        } else if (!API.wallLeft()) {
+    while (paths_available() == 1 && strcmp(locationcvToString(), destination) != 0) {
+        if (!API_wallFront()) {
+            API_moveForward();
+        } else if (!API_wallLeft()) {
             move_left();
-        } else if (!API.wallRight()) {
+        } else if (!API_wallRight()) {
             move_right();
         }
     }
 }
 
 void highlight_path(Custom_Vertex *current, int found) {
-    log("Highlighting to %s", current->toString);
+    ////logg("Highlighting to %s", current->cvToString);
     Stack *point_to_points = createStack();
 
     while (current->predecessor != NULL) {
-        char *highlight = malloc(sizeof(char) * (strlen(current->toString) + strlen(current->predecessor->toString) + 2));
-        sprintf(highlight, "%s %s", current->toString, current->predecessor->toString);
+        char *highlight = malloc(sizeof(char) * (strlen(current->cvToString) + strlen(current->predecessor->cvToString) + 2));
+        sprintf(highlight, "%s %s", current->cvToString, current->predecessor->cvToString);
         push(point_to_points, highlight);
-        log("Added highlight from %s to %s", current->toString, current->predecessor->toString);
+        ////logg("Added highlight from %s to %s", current->cvToString, current->predecessor->cvToString);
         current = current->predecessor;
     }
 
@@ -519,9 +508,9 @@ void highlight_path(Custom_Vertex *current, int found) {
             char *hallway = point_to_point_hallways->array[i];
             int *hallway_coor = parseCoordinates(hallway);
             if (found) {
-                API.setColor(hallway_coor[0], hallway_coor[1], 'g');
+                API_setColor(hallway_coor[0], hallway_coor[1], 'g');
             } else {
-                API.setColor(hallway_coor[0], hallway_coor[1], 'R');
+                API_setColor(hallway_coor[0], hallway_coor[1], 'R');
             }
             free(hallway_coor);
         }
@@ -538,12 +527,12 @@ void highlight_path(Custom_Vertex *current, int found) {
 }
 
 void recolor_path(Custom_Vertex *current) {
-    log("Recoloring from %s", current->toString);
+    ////logg("Recoloring from %s", current->cvToString);
     Stack *point_to_points = createStack();
 
     while (current->predecessor != NULL) {
-        char *highlight = malloc(sizeof(char) * (strlen(current->toString) + strlen(current->predecessor->toString) + 2));
-        sprintf(highlight, "%s %s", current->toString, current->predecessor->toString);
+        char *highlight = malloc(sizeof(char) * (strlen(current->cvToString) + strlen(current->predecessor->cvToString) + 2));
+        sprintf(highlight, "%s %s", current->cvToString, current->predecessor->cvToString);
         push(point_to_points, highlight);
         current = current->predecessor;
     }
@@ -554,11 +543,11 @@ void recolor_path(Custom_Vertex *current) {
             char *hallway = point_to_point_hallways->array[i];
             int *hallway_coor = parseCoordinates(hallway);
             if (vertices->containsKey(hallway) && vertices->get(hallway)->is_visited) {
-                API.setColor(hallway_coor[0], hallway_coor[1], 'G');
+                API_setColor(hallway_coor[0], hallway_coor[1], 'G');
             } else if (vertices->containsKey(hallway)) {
-                API.setColor(hallway_coor[0], hallway_coor[1], 'Y');
+                API_setColor(hallway_coor[0], hallway_coor[1], 'Y');
             } else {
-                API.clearColor(hallway_coor[0], hallway_coor[1]);
+                API_clearColor(hallway_coor[0], hallway_coor[1]);
             }
             free(hallway_coor);
         }
@@ -570,11 +559,11 @@ void head_to(Custom_Vertex *current_vertex, Custom_Vertex *vertex_to_visit, int 
     Stack *stack_of_vertex_names = djikstras_best_path_between(current_vertex, vertex_to_visit, NULL, color);
 
     while (!equals(current_vertex, vertex_to_visit)) {
-        char *current_vertex_id = ids->get(current_vertex->toString);
+        char *current_vertex_id = ids->get(current_vertex->cvToString);
         char *stack_top = peek(stack_of_vertex_names);
         char *stack_vertex_id = ids->get(stack_top);
 
-        log("\t Moving from %s to %s", current_vertex_id, stack_vertex_id);
+        ////logg("\t Moving from %s to %s", current_vertex_id, stack_vertex_id);
 
         //move
         move_towards_heading(current_vertex->to[stack_top[0] - '0']);
@@ -592,24 +581,24 @@ void move_towards_heading(ORIENTATION heading) {
 }
 
 void find_next_vertex() {
-    move_forward();
+    API_moveForward();
 
     while (paths_available() == 1) {
-        if (!API.wallFront()) {
-            move_forward();
-        } else if (!API.wallLeft()) {
+        if (!API_wallFront()) {
+            API_moveForward();
+        } else if (!API_wallLeft()) {
             move_left();
-        } else if (!API.wallRight()) {
+        } else if (!API_wallRight()) {
             move_right();
         }
     }
 }
 
 Custom_Vertex *first_vertex() {
-    Custom_Vertex *current_vertex = create_Custom_Vertex(vertex_id, location->toString(), current_cost);
+    Custom_Vertex *current_vertex = create_custom_vertex(vertex_id, location->cvToString(), current_cost);
 
-    vertices->put(location->toString(), current_vertex);
-    ids->put(location->toString(), itoa(vertex_id));
+    vertices->put(location->cvToString(), current_vertex);
+    ids->put(location->cvToString(), itoa(vertex_id));
 
     API->setColor(location->x, location->y, 'G');
     API->setText(location->x, location->y, itoa(vertex_id++));
@@ -623,7 +612,7 @@ Custom_Vertex *first_vertex() {
 
 
 void search_paths(Custom_Vertex *current_vertex) {
-    log("Cost of " + ids->get(current_vertex->toString()) + ": " + itoa(current_vertex->get_cost()));
+    ////logg("Cost of " + ids->get(current_vertex->cvToString()) + ": " + itoa(current_vertex->getCost()));
 
     ORIENTATION original_orientation = orientation;
 
@@ -636,24 +625,24 @@ void search_paths(Custom_Vertex *current_vertex) {
 
         switch(paths[i]) {
             case NORTH:
-                reorient(ORIENTATION_NORTH);
-                log("Reorienting & Searching NORTH");
-                search(current_vertex, ORIENTATION_NORTH);
+                reorient(NORTH);
+                ////logg("Reorienting & Searching NORTH");
+                search(current_vertex, NORTH);
                 break;
             case EAST:
-                reorient(ORIENTATION_EAST);
-                log("Reorienting & Searching EAST");
-                search(current_vertex, ORIENTATION_EAST);
+                reorient(EAST);
+                ////logg("Reorienting & Searching EAST");
+                search(current_vertex, EAST);
                 break;
             case SOUTH:
-                reorient(ORIENTATION_SOUTH);
-                log("Reorienting & Searching SOUTH");
-                search(current_vertex, ORIENTATION_SOUTH);
+                reorient(SOUTH);
+                ////logg("Reorienting & Searching SOUTH");
+                search(current_vertex, SOUTH);
                 break;
             case WEST:
-                reorient(ORIENTATION_WEST);
-                log("Reorienting & Searching WEST");
-                search(current_vertex, ORIENTATION_WEST);
+                reorient(WEST);
+                ////logg("Reorienting & Searching WEST");
+                search(current_vertex, WEST);
                 break;
         }
     }
@@ -662,71 +651,71 @@ void search_paths(Custom_Vertex *current_vertex) {
 
 void search(Custom_Vertex *current_vertex, ORIENTATION heading) {
     ArrayList *vertex_hallways = createArrayList();
-    addElement(vertex_hallways, current_vertex->toString());
-    move_forward();
+    addElement(vertex_hallways, current_vertex->cvToString());
+    API_moveForward();
 
     while (paths_available() == 1) {
-        if (!ids_containsKey(location->toString())) {
+        if (!ids_containsKey(location->cvToString())) {
             API_setText(location->x, location->y, ".");
-            if (!hallways_containsKey(location->toString())) {
-                Hallway *new_hallway = createHallway(location->toString(), current_vertex, current_cost, reverse(orientation), heading);
-                hallways_put(location->toString(), new_hallway);
+            if (!hallways_containsKey(location->cvToString())) {
+                Hallway *new_hallway = createHallway(location->cvToString(), current_vertex, current_cost, reverse(orientation), heading);
+                hallways_put(location->cvToString(), new_hallway);
             }
         }
 
-        addElement(vertex_hallways, location->toString());
-        point_to_point_hallways_put(concat(current_vertex->toString(), " ", location->toString()), vertex_hallways);
-        point_to_point_hallways_put(concat(location->toString(), " ", current_vertex->toString()), vertex_hallways);
+        addElement(vertex_hallways, location->cvToString());
+        point_to_point_hallways_put(concat(current_vertex->cvToString(), " ", location->cvToString()), vertex_hallways);
+        point_to_point_hallways_put(concat(location->cvToString(), " ", current_vertex->cvToString()), vertex_hallways);
 
         if (!API_wallFront()) {
-            move_forward();
+            API_moveForward();
         } else if (!API_wallLeft()) {
             move_left();
         } else if (!API_wallRight()) {
             move_right();
         }
 
-        if (current_vertex->get_cost() + current_cost >= optimal_cost) {
-            log("This search exceeds the optimal cost and is no longer worth following.");
+        if (current_vertex->getCost() + current_cost >= optimal_cost) {
+            ////logg("This search exceeds the optimal cost and is no longer worth following.");
             break;
         }
     }
 
     if (paths_available() == 0) {
-        log("Deadend.");
-        Hallway *new_hallway = createHallway(location->toString(), current_vertex, current_cost, reverse(orientation), heading);
-        hallways_put(location->toString(), new_hallway);
-        Hallway *hallway = hallways_get(location->toString());
+        ////logg("Deadend.");
+        Hallway *new_hallway = createHallway(location->cvToString(), current_vertex, current_cost, reverse(orientation), heading);
+        hallways_put(location->cvToString(), new_hallway);
+        Hallway *hallway = hallways_get(location->cvToString());
         hallway_visit(hallway);
-        addElement(vertex_hallways, location->toString());
-        point_to_point_hallways_put(concat(current_vertex->toString(), " ", location->toString()), vertex_hallways);
-        point_to_point_hallways_put(concat(location->toString(), " ", current_vertex->toString()), vertex_hallways);
-        return_to_vertex(current_vertex->toString(), NULL);
+        addElement(vertex_hallways, location->cvToString());
+        point_to_point_hallways_put(concat(current_vertex->cvToString(), " ", location->cvToString()), vertex_hallways);
+        point_to_point_hallways_put(concat(location->cvToString(), " ", current_vertex->cvToString()), vertex_hallways);
+        return_to_vertex(current_vertex->cvToString(), NULL);
     } else if (paths_available() >= 2) {
         // vertex exists
-        if (vertices_containsKey(location->toString())) {
+        if (vertices_containsKey(location->cvToString())) {
             // if this vertex has been visited, this vertex knows everything, so return to source vertex
             // else update the vertex --
-            if (!vertices_get(location->toString())->is_visited()) {
-                Custom_Vertex *existing_vertex = vertices_get(location->toString());
+            if (!vertices_get(location->cvToString())->is_visited()) {
+                Custom_Vertex *existing_vertex = vertices_get(location->cvToString());
                 current_vertex_add_to(existing_vertex, heading);
                 existing_vertex_add_to(current_vertex, reverse(orientation));
-                edges_put(concat(current_vertex->toString(), " ", existing_vertex->toString()), current_cost);
-                edges_put(concat(existing_vertex->toString(), " ", current_vertex->toString()), current_cost);
-                if (existing_vertex_update(existing_vertex, current_vertex->get_cost() + current_cost, current_vertex, heading, reverse(orientation))) {
-                    log(concat("Node ", ids_get(existing_vertex->toString()), " has found a better predecessor, node ", ids_get(current_vertex->toString()), " with ", current_vertex->get_cost() + current_cost));
+                edges_put(concat(current_vertex->cvToString(), " ", existing_vertex->cvToString()), current_cost);
+                edges_put(concat(existing_vertex->cvToString(), " ", current_vertex->cvToString()), current_cost);
+                if (existing_vertex_update(existing_vertex, current_vertex->getCost() + current_cost, current_vertex, heading, reverse(orientation))) {
+                    ////logg(concat("Node ", ids_get(existing_vertex->cvToString()), " has found a better predecessor, node ", ids_get(current_vertex->cvToString()), " with ", current_vertex->getCost() + current_cost));
                     pq_remove(existing_vertex);
                     pq_add(existing_vertex);
                 }
             }
         } else { // vertex does not exist
-            Custom_Vertex *new_vertex = createCustom_Vertex(vertex_id, location->toString(), current_vertex->get_cost() + current_cost, current_vertex, heading, reverse(orientation));
-            vertices_put(location->toString(), new_vertex);
-            ids_put(location->toString(), itoa(vertex_id));
+            Custom_Vertex *new_vertex = createCustom_Vertex(vertex_id, location->cvToString(), current_vertex->getCost() + current_cost, current_vertex, heading, reverse(orientation));
+            vertices_put(location->cvToString(), new_vertex);
+            ids_put(location->cvToString(), itoa(vertex_id));
             current_vertex_add_to(new_vertex, reverse(orientation));
             new_vertex_add_to(current_vertex, heading);
-            edges_put(concat(current_vertex->toString(), " ", location->toString()), current_cost);
-            edges_put(concat(location->toString(), " ", current_vertex->toString()), current_cost);
+            edges_put(concat(current_vertex->cvToString(), " ", location->cvToString()), current_cost);
+            edges_put(concat(location->cvToString(), " ", current_vertex->cvToString()), current_cost);
             API_setColor(location->x, location->y, 'Y');
             API_setText(location->x, location->y, itoa(vertex_id++));
             if (check_for_end(current_vertex)) {
@@ -735,11 +724,11 @@ void search(Custom_Vertex *current_vertex, ORIENTATION heading) {
                 pq_add(new_vertex);
             }
         }
-        addElement(vertex_hallways, location->toString());
-        point_to_point_hallways_put(concat(current_vertex->toString(), " ", location->toString()), vertex_hallways);
-        point_to_point_hallways_put(concat(location->toString(), " ", current_vertex->toString()), vertex_hallways);
-        log(concat(current_vertex->toString(), " has hallways to ", location->toString(), " now."));
-        return_to_vertex(current_vertex->toString(), vertices_get(location->toString()));
+        addElement(vertex_hallways, location->cvToString());
+        point_to_point_hallways_put(concat(current_vertex->cvToString(), " ", location->cvToString()), vertex_hallways);
+        point_to_point_hallways_put(concat(location->cvToString(), " ", current_vertex->cvToString()), vertex_hallways);
+        ////logg(concat(current_vertex->cvToString(), " has hallways to ", location->cvToString(), " now."));
+        return_to_vertex(current_vertex->cvToString(), vertices_get(location->cvToString()));
     }
 }
 
@@ -747,26 +736,26 @@ bool check_for_end(Custom_Vertex *prev_vertex) {
     if ((location->x == 7 && location->y == 7) || (location->x == 7 && location->y == 8) || (location->x == 8 && location->y == 7) || (location->x == 8 && location->y == 8)) {
         API_setColor(location->x, location->y, 'C');
 
-        int total_cost = prev_vertex->get_cost() + current_cost;
+        int total_cost = prev_vertex->getCost() + current_cost;
         char path[MAX_PATH_LENGTH];
         memset(path, 0, sizeof(path));
 
         if (total_cost < optimal_cost) {
             best_path = createStack();
-            Custom_Vertex *current_vertex = vertices_get(location->toString());
+            Custom_Vertex *current_vertex = vertices_get(location->cvToString());
 
             while (current_vertex != NULL) {
-                push(best_path, current_vertex->toString());
+                push(best_path, current_vertex->cvToString());
                 char temp[MAX_ID_LENGTH];
-                sprintf(temp, "%s ", ids_get(current_vertex->toString()));
+                sprintf(temp, "%s ", ids_get(current_vertex->cvToString()));
                 strcat(path, temp);
                 current_vertex = current_vertex->get_predecessor();
             }
 
             optimal_cost = total_cost;
-            log(concat("Found optimal path. Cost: ", itoa(total_cost), "\nPath:", reverseString(path)));
+            ////logg(concat("Found optimal path. Cost: ", itoa(total_cost), "\nPath:", reverseString(path)));
         } else {
-            log("Found suboptimal path. Shouldn't happen");
+            ////logg("Found suboptimal path. Shouldn't happen");
         }
 
         return true;
@@ -776,10 +765,10 @@ bool check_for_end(Custom_Vertex *prev_vertex) {
 }
 
 void return_to_vertex(char *prev_vertex, Custom_Vertex *new_vertex) {
-    log(concat("Returning to previous vertex, ", ids_get(prev_vertex)));
+    ////logg(concat("Returning to previous vertex, ", ids_get(prev_vertex)));
 
     ArrayList *vertex_hallways = createArrayList();
-    add(vertex_hallways, location->toString());
+    add(vertex_hallways, location->cvToString());
 
     // Turn around
     API_turnLeft();
@@ -789,24 +778,24 @@ void return_to_vertex(char *prev_vertex, Custom_Vertex *new_vertex) {
 
     // Edge case worth exploring -- determining the cost of +0/1 for the turn required (or not) to get from a vertex to a hallway. Check Orientation upon arrival vs Orientation of travel to hallway...
     current_cost = 1;
-    move_forward();
+    API_moveForward();
 
     while (paths_available() == 1) {
-        if (!hallways_get(location->toString())->is_visited && new_vertex != NULL) {
-            Hallway *existing_hallway = hallways_get(location->toString());
+        if (!hallways_get(location->cvToString())->is_visited && new_vertex != NULL) {
+            Hallway *existing_hallway = hallways_get(location->cvToString());
             add_vertex_b(existing_hallway, new_vertex, current_cost, reverse(orientation), from_b);
             existing_hallway->visit();
-            log(concat("Hallway ", location->toString(), " complete."));
+            ////logg(concat("Hallway ", location->cvToString(), " complete."));
         }
 
-        add(vertex_hallways, location->toString());
+        add(vertex_hallways, location->cvToString());
         if (new_vertex != NULL) {
-            add(point_to_point_hallways, concat(new_vertex->toString(), concat(" ", location->toString())));
-            add(point_to_point_hallways, concat(location->toString(), concat(" ", new_vertex->toString())));
+            add(point_to_point_hallways, concat(new_vertex->cvToString(), concat(" ", location->cvToString())));
+            add(point_to_point_hallways, concat(location->cvToString(), concat(" ", new_vertex->cvToString())));
         }
 
         if (!API_wallFront()) {
-            move_forward();
+            API_moveForward();
         } else if (!API_wallLeft()) {
             move_left();
         } else if (!API_wallRight()) {
@@ -833,7 +822,7 @@ int paths_available() {
     return paths_available;
 }
 
-void move_forward() {
+void API_moveForward() {
     API_moveForward();
     current_cost++;
 
@@ -865,22 +854,22 @@ void move_left() {
 
     switch (orientation) {
         case NORTH:
-            orientation = ORIENTATION_WEST;
+            orientation = WEST;
             location->x--;
             break;
 
         case EAST:
-            orientation = ORIENTATION_NORTH;
+            orientation = NORTH;
             location->y++;
             break;
 
         case SOUTH:
-            orientation = ORIENTATION_EAST;
+            orientation = EAST;
             location->x++;
             break;
 
         case WEST:
-            orientation = ORIENTATION_SOUTH;
+            orientation = SOUTH;
             location->y--;
             break;
     }
@@ -895,22 +884,22 @@ void move_right() {
 
     switch (orientation) {
         case NORTH:
-            orientation = ORIENTATION_EAST;
+            orientation = EAST;
             location->x++;
             break;
 
         case EAST:
-            orientation = ORIENTATION_SOUTH;
+            orientation = SOUTH;
             location->y--;
             break;
 
         case SOUTH:
-            orientation = ORIENTATION_WEST;
+            orientation = WEST;
             location->x--;
             break;
 
         case WEST:
-            orientation = ORIENTATION_NORTH;
+            orientation = NORTH;
             location->y++;
             break;
     }
@@ -942,7 +931,7 @@ void west_to(ORIENTATION target_orientation) {
     switch (target_orientation) {
         case NORTH:
             API_turnRight();
-            orientation = ORIENTATION_NORTH;
+            orientation = NORTH;
             current_cost++;
             break;
 
@@ -950,12 +939,12 @@ void west_to(ORIENTATION target_orientation) {
             API_turnRight();
             API_turnRight();
             current_cost += 2;
-            orientation = ORIENTATION_EAST;
+            orientation = EAST;
             break;
 
         case SOUTH:
             API_turnLeft();
-            orientation = ORIENTATION_SOUTH;
+            orientation = SOUTH;
             current_cost++;
             break;
 
@@ -970,12 +959,12 @@ void south_to(ORIENTATION target_orientation) {
             API_turnLeft();
             API_turnLeft();
             current_cost += 2;
-            orientation = ORIENTATION_NORTH;
+            orientation = NORTH;
             break;
 
         case EAST:
             API_turnLeft();
-            orientation = ORIENTATION_EAST;
+            orientation = EAST;
             current_cost++;
             break;
 
@@ -984,7 +973,7 @@ void south_to(ORIENTATION target_orientation) {
 
         case WEST:
             API_turnRight();
-            orientation = ORIENTATION_WEST;
+            orientation = WEST;
             current_cost++;
             break;
     }
@@ -994,7 +983,7 @@ void east_to(ORIENTATION target_orientation) {
     switch (target_orientation) {
         case NORTH:
             API_turnLeft();
-            orientation = ORIENTATION_NORTH;
+            orientation = NORTH;
             current_cost++;
             break;
 
@@ -1003,7 +992,7 @@ void east_to(ORIENTATION target_orientation) {
 
         case SOUTH:
             API_turnRight();
-            orientation = ORIENTATION_SOUTH;
+            orientation = SOUTH;
             current_cost++;
             break;
 
@@ -1011,7 +1000,7 @@ void east_to(ORIENTATION target_orientation) {
             API_turnLeft();
             API_turnLeft();
             current_cost += 2;
-            orientation = ORIENTATION_WEST;
+            orientation = WEST;
             break;
     }
 }
@@ -1024,19 +1013,19 @@ void north_to(ORIENTATION target_orientation) {
         case EAST:
             API_turnRight();
             current_cost++;
-            orientation = ORIENTATION_EAST;
+            orientation = EAST;
             break;
 
         case SOUTH:
             API_turnRight();
             API_turnRight();
-            orientation = ORIENTATION_SOUTH;
+            orientation = SOUTH;
             current_cost += 2;
             break;
 
         case WEST:
             API_turnLeft();
-            orientation = ORIENTATION_WEST;
+            orientation = WEST;
             current_cost++;
             break;
     }
@@ -1064,66 +1053,66 @@ void enque_paths(Custom_Vertex *current_vertex) {
 
 void enque_paths_north(Custom_Vertex *current_vertex) {
     if (!API_wallLeft()) {
-        add_path(current_vertex, ORIENTATION_WEST);
+        add_path(current_vertex, WEST);
     }
     if (!API_wallFront()) {
-        add_path(current_vertex, ORIENTATION_NORTH);
+        add_path(current_vertex, NORTH);
     }
     if (!API_wallRight()) {
-        add_path(current_vertex, ORIENTATION_EAST);
+        add_path(current_vertex, EAST);
     }
 }
 
 void enque_paths_east(Custom_Vertex *current_vertex) {
     if (!API_wallLeft()) {
-        add_path(current_vertex, ORIENTATION_NORTH);
+        add_path(current_vertex, NORTH);
     }
     if (!API_wallFront()) {
-        add_path(current_vertex, ORIENTATION_EAST);
+        add_path(current_vertex, EAST);
     }
     if (!API_wallRight()) {
-        add_path(current_vertex, ORIENTATION_SOUTH);
+        add_path(current_vertex, SOUTH);
     }
 }
 
 void enque_paths_south(Custom_Vertex *current_vertex) {
     if (!API_wallLeft()) {
-        add_path(current_vertex, ORIENTATION_EAST);
+        add_path(current_vertex, EAST);
     }
     if (!API_wallFront()) {
-        add_path(current_vertex, ORIENTATION_SOUTH);
+        add_path(current_vertex, SOUTH);
     }
     if (!API_wallRight()) {
-        add_path(current_vertex, ORIENTATION_WEST);
+        add_path(current_vertex, WEST);
     }
 }
 
 void enque_paths_west(Custom_Vertex *current_vertex) {
     if (!API_wallLeft()) {
-        add_path(current_vertex, ORIENTATION_SOUTH);
+        add_path(current_vertex, SOUTH);
     }
     if (!API_wallFront()) {
-        add_path(current_vertex, ORIENTATION_WEST);
+        add_path(current_vertex, WEST);
     }
     if (!API_wallRight()) {
-        add_path(current_vertex, ORIENTATION_NORTH);
+        add_path(current_vertex, NORTH);
     }
 }
 
 void djikstras_solution() 
 {
-    log("Djikstra's solution marked in red.");
+    ////logg("Djikstra's solution marked in red.");
     API_ackReset();
-    location.x = 0;
-    location.y = 0;
-    orientation = ORIENTATION_NORTH;
+    location->x = 0;
+    location->y = 0;
+    orientation = NORTH;
 
     best_path.pop();
     //return_to_first_vertex();
 
     while (!best_path.isEmpty())
     {
-        solution_move(vertices.get(location.toString())->get_to(best_path.pop()));
+        solution_move(vertices.get(location.cvToString())->get_to(best_path.pop()));
     }
 }
 
@@ -1131,10 +1120,10 @@ void return_to_first_vertex()
 {
     while (paths_available() == 1)
     {
-        API_setColor(location.x, location.y, 'R');
+        API_setColor(location->x, location->y, 'R');
         if (!API_wallFront())
         {
-            move_forward();
+            API_moveForward();
         }
         else if (!API_wallLeft())
         {
@@ -1155,15 +1144,15 @@ void solution_move(ORIENTATION heading)
 
 void solution_next_vertex() 
 {
-    API_setColor(location.x, location.y, 'R');
-    move_forward();
+    API_setColor(location->x, location->y, 'R');
+    API_moveForward();
 
     while (paths_available() == 1)
     {
-        API_setColor(location.x, location.y, 'R');
+        API_setColor(location->x, location->y, 'R');
         if (!API_wallFront())
         {
-            move_forward();
+            API_moveForward();
         }
         else if (!API_wallLeft())
         {
@@ -1180,16 +1169,16 @@ ORIENTATION reverse(ORIENTATION orientation)
 {
     switch (orientation)
     {
-        case ORIENTATION_NORTH: return ORIENTATION_SOUTH;
+        case NORTH: return SOUTH;
 
-        case ORIENTATION_EAST: return ORIENTATION_WEST;
+        case EAST: return WEST;
 
-        case ORIENTATION_SOUTH: return ORIENTATION_NORTH;
+        case SOUTH: return NORTH;
 
-        case ORIENTATION_WEST: return ORIENTATION_EAST;
+        case WEST: return EAST;
 
         default:
-            return null;
+            return NULL;
     }
 }
 
@@ -1197,22 +1186,22 @@ void print_orientation()
 {
     switch (orientation)
     {
-        case ORIENTATION_NORTH: log("Orientation: NORTH");
+        case NORTH: ////logg("Orientation: NORTH");
                                 break;
 
-        case ORIENTATION_EAST: log("Orientation: EAST");
+        case EAST: ////logg("Orientation: EAST");
                                 break;
 
-        case ORIENTATION_SOUTH: log("Orientation: SOUTH");
+        case SOUTH: ////logg("Orientation: SOUTH");
                                 break;
 
-        case ORIENTATION_WEST: log("Orientation: WEST");
+        case WEST: ////logg("Orientation: WEST");
                                 break;
     }
 }
 
 
-void log(char* text) {
+void ////logg(char* text) {
     fprintf(stderr, "%s\n", text);
     fflush(stderr);
 }

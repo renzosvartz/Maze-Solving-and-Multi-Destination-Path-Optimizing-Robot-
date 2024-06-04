@@ -69,7 +69,7 @@ Custom_Vertex* dequeue(PriorityQueue* pq) {
     return front;
 }
 
-Custom_Vertex* peek(PriorityQueue* pq) {
+Custom_Vertex* peekPQ(PriorityQueue* pq) {
     if (isEmpty(pq)) {
         fprintf(stderr, "Error: PriorityQueue is empty\n");
         exit(EXIT_FAILURE);

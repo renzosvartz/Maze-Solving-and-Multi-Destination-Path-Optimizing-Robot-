@@ -17,10 +17,10 @@ void destroyArrayList(ArrayList *list) {
     free(list);
 }
 
-void addElement(ArrayList *list, int element) {
+void addElement(ArrayList *list, void *element) {
     if (list->size >= list->capacity) {
         int newCapacity = (list->capacity == 0) ? 1 : list->capacity * 2;
-        int *newArray = (int *)realloc(list->array, newCapacity * sizeof(int));
+        void **newArray = realloc(list->array, newCapacity * sizeof(void *));
         if (newArray == NULL) {
             return; // Memory allocation failed
         }
@@ -30,7 +30,7 @@ void addElement(ArrayList *list, int element) {
     list->array[list->size++] = element;
 }
 
-int getElement(ArrayList *list, int index) {
+char * getElement(ArrayList *list, int index) {
     if (index < 0 || index >= list->size) {
         return -1; // Invalid index
     }
@@ -41,6 +41,6 @@ int getSize(ArrayList *list) {
     return list->size;
 }
 
-int isEmpty(ArrayList *list) {
+int isArrayListEmpty(ArrayList *list) {
     return (list->size == 0);
 }

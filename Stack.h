@@ -19,11 +19,12 @@ typedef struct {
 
 // Function prototypes
 Stack* createStack();
-void push(Stack* stack, int data);
-int pop(Stack* stack);
-int peek(Stack* stack);
-int isEmpty(Stack* stack);
+void push(Stack* stack, char* data);
+char* pop(Stack* stack);
+char* peek(Stack* stack);
+int isStackEmpty(Stack* stack);
 void clearStack(Stack* stack);
+int stackLength(Stack* stack);
 void printStack(Stack* stack);
 
 #endif /* STACK_H */

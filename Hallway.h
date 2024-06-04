@@ -27,8 +27,8 @@ Custom_Vertex* get_b(Hallway* hallway);
 int get_cost_b(Hallway* hallway);
 ORIENTATION get_to_b(Hallway* hallway);
 ORIENTATION get_from_b(Hallway* hallway);
-void visit(Hallway* hallway);
-bool is_visited(Hallway* hallway);
+void visitHallway(Hallway* hallway);
+bool isHallwayVisited(Hallway* hallway);
 char* toString(Hallway* hallway);
 void destroyHallway(Hallway* hallway);
 

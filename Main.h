@@ -9,4 +9,6 @@ typedef enum {
     WEST
 } ORIENTATION;
 
+void logg(char* text);
+
 #endif /* MAIN_H */

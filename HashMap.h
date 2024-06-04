@@ -3,7 +3,7 @@
 
 typedef struct KeyValuePair {
     char* key;
-    int value;
+    void* value;
     struct KeyValuePair* next; // Pointer to the next key-value pair in case of collisions
 } KeyValuePair;
 
@@ -14,8 +14,8 @@ typedef struct {
 } HashMap;
 
 HashMap* createHashMap(int capacity);
-void put(HashMap* map, const char* key, int value);
-int get(HashMap* map, const char* key);
+void put(HashMap* map, const char* key, void* value);
+void* get(HashMap* map, const char* key);
 int containsKey(HashMap* map, const char* key);
 void removeKey(HashMap* map, const char* key);
 void clearHashMap(HashMap* map);

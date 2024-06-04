@@ -61,11 +61,11 @@ ORIENTATION get_from_b(Hallway* hallway) {
     return hallway->from_b;
 }
 
-void visit(Hallway* hallway) {
+void visitHallway(Hallway* hallway) {
     hallway->visited = true;
 }
 
-bool is_visited(Hallway* hallway) {
+bool isHallwayVisited(Hallway* hallway) {
     return hallway->visited;
 }
 

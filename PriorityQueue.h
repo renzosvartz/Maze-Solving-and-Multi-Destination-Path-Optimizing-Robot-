@@ -12,7 +12,7 @@ typedef struct {
 PriorityQueue* createPriorityQueue(int capacity);
 void enqueue(PriorityQueue* pq, Custom_Vertex* vertex);
 Custom_Vertex* dequeue(PriorityQueue* pq);
-Custom_Vertex* peek(PriorityQueue* pq);
+Custom_Vertex* peekPQ(PriorityQueue* pq);
 int isEmpty(PriorityQueue* pq);
 void clearPriorityQueue(PriorityQueue* pq);
 

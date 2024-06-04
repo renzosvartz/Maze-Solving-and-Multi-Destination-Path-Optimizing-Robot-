@@ -3,7 +3,7 @@
 
 // Define the ArrayList struct
 typedef struct ArrayList {
-    int *array;
+    void* *array;
     int size;
     int capacity;
 } ArrayList;
@@ -11,9 +11,9 @@ typedef struct ArrayList {
 // Function prototypes
 ArrayList *createArrayList();
 void destroyArrayList(ArrayList *list);
-void addElement(ArrayList *list, int element);
+void addElement(ArrayList *list, void *element);
 int getElement(ArrayList *list, int index);
 int getSize(ArrayList *list);
-int isEmpty(ArrayList *list);
+int isArrayListEmpty(ArrayList *list);
 
 #endif /* ARRAYLIST_H */

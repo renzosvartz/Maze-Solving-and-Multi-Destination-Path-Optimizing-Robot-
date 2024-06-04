@@ -14,7 +14,7 @@ Stack* createStack() {
 }
 
 // Function to push an element onto the stack
-void push(Stack* stack, int data) {
+void push(Stack* stack, char* data) {
     StackNode* newNode = (StackNode*)malloc(sizeof(StackNode));
     if (newNode == NULL) {
         fprintf(stderr, "Error: Memory allocation failed\n");
@@ -26,7 +26,7 @@ void push(Stack* stack, int data) {
 }
 
 // Function to pop an element from the stack
-int pop(Stack* stack) {
+char* pop(Stack* stack) {
     if (isEmpty(stack)) {
         fprintf(stderr, "Error: Stack is empty, cannot pop\n");
         exit(EXIT_FAILURE);
@@ -39,7 +39,7 @@ int pop(Stack* stack) {
 }
 
 // Function to peek at the top element of the stack
-int peek(Stack* stack) {
+char* peek(Stack* stack) {
     if (isEmpty(stack)) {
         fprintf(stderr, "Error: Stack is empty, cannot peek\n");
         exit(EXIT_FAILURE);
@@ -48,7 +48,7 @@ int peek(Stack* stack) {
 }
 
 // Function to check if the stack is empty
-int isEmpty(Stack* stack) {
+int isStackEmpty(Stack* stack) {
     return (stack->top == NULL);
 }
 
@@ -57,6 +57,16 @@ void clearStack(Stack* stack) {
     while (!isEmpty(stack)) {
         pop(stack);
     }
+}
+
+int stackLength(Stack* stack) {
+    int length = 0;
+    StackNode* current = stack->top;
+    while (current != NULL) {
+        length++;
+        current = current->next;
+    }
+    return length;
 }
 
 // Function to print the stack
